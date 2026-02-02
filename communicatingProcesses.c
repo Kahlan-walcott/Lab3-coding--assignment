@@ -14,22 +14,31 @@ int main() {
     int fd[2];
     int pid;
     int pipeCreationResult;
-    pipeCreationResult = pipe(fd);
-    if(pipeCreationResult < 0){
-        perror("Failed pipe creation\n");
-        exit(1);
-    }
-
     pid = fork();
     
     if(pid < 0) {
         perror("Fork failed");
         exit(1);
     }
-    int output = (rand() % 2) + 1; // 1 or 2
-    int input;
+    
+    pipeCreationResult = pipe(fd);
+    if(pipeCreationResult < 0){
+        perror("Failed pipe creation\n");
+        exit(1);
+    }
 
-    signal(SIGINT, sigHandler);
+    int output = (rand() % 3) + 1; // 1 or 2 or 3 
+    int input;
+    printf("%d", output);
+    if (output == 1) {
+        signal(SIGUSR1, sigHandler);
+    }
+    else if (output == 2) {
+        signal(SIGUSR2, sigHandler);
+    }
+    else {
+        signal(SIGINT, sigHandler);
+    }
     printf("waiting...\n");  
     pause();  
 
