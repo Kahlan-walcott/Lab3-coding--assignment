@@ -15,6 +15,8 @@ int main() {
     int fd[2]; // would there need to be a loop somewhere to resend a different signal?
     int pid;
     int pipeCreationResult;
+    pipeCreationResult = pipe(fd);
+
     pid = fork(); 
     
     if(pid < 0) {
@@ -22,7 +24,6 @@ int main() {
         exit(1);
     }
     
-    pipeCreationResult = pipe(fd);
     if(pipeCreationResult < 0){
         perror("Failed pipe creation\n");
         exit(1);
@@ -39,8 +40,12 @@ int main() {
     }
     signal(SIGINT, sigHandler); // works
 
-    printf("waiting...\n");  
-    pause();  
+    int x = 0
+    while (x < 10){
+        printf("waiting...\n");
+        int x = x + 1;  
+        pause();  
+    }
 
     if(pid == 0) { // Child process  
         //pause();
