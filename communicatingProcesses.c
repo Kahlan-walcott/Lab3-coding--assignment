@@ -12,50 +12,48 @@
 void sigHandler (int); 
 
 int main() {  
-    int fd[2]; // would there need to be a loop somewhere to resend a different signal?
+    int fd[2]; 
     int pid;
     int pipeCreationResult;
     pipeCreationResult = pipe(fd);
+    if(pipeCreationResult < 0){
+        perror("Failed pipe creation\n");
+        exit(1);
+    }
 
     pid = fork(); 
-    
     if(pid < 0) {
         perror("Fork failed");
         exit(1);
     }
     
-    if(pipeCreationResult < 0){
-        perror("Failed pipe creation\n");
-        exit(1);
-    }
-    srand(time(NULL));
-    int output = (rand() % 2) + 1; // 1 or 2 
-    int input;
-    printf("%d", output);
-    if (output == 1) { // might have to move these if statements arround
-        signal(SIGUSR1, sigHandler);
-    }
-    else if (output == 2) { // these two don't do anything yet 
-        signal(SIGUSR2, sigHandler);
-    }
-    signal(SIGINT, sigHandler); // works
 
-    int x = 0
-    while (x < 10){
-        printf("waiting...\n");
-        int x = x + 1;  
-        pause();  
-    }
+    signal(SIGUSR1, sigHandler);
+    signal(SIGUSR2, sigHandler);
+    signal(SIGINT, sigHandler); 
+
+    srand(time(NULL));
 
     if(pid == 0) { // Child process  
-        //pause();
-        printf("spawned child PID# %d\n", pid);
-        write(fd[1], &output, sizeof(int));
-        printf("Child wrote [%d]\n", output);
+        printf("spawned child PID# %d\n", getpid());
+        close(fd[0]);
+        while(1) {
+            int output = (rand() % 2) + 1; // 1 or 2 
+            if (output == 1) {
+                kill(getppid(), SIGUSR1);
+            }
+            else {
+                kill(getppid(), SIGUSR2);
+            }
+            sleep(1);
+        }
     }
     else {
-        read(fd[0], &input, sizeof(int)); // SIGUSR1 OR 2 USE RANDOM FUNCTION
-        printf("Parent received [%d] from child process\n", input);
+        close(fd[1]);
+        while(1) {
+            printf("waiting...\t");
+            pause();
+        }
     }
     return 0;  
 } 
@@ -68,10 +66,9 @@ void sigHandler (int sigNum) {
         printf("received a SIGUSR2 signal\n");
     }
     else if (sigNum == SIGINT) { // To find Ctrl c
-        printf (" That's it, I'm shutting you down.\n");  
+        printf ("^C received.  That's it, I'm shutting you down.\n");  
         // this is where shutdown code would be inserted  
-        sleep(1);  
-        printf("time to exit\n");  
+        sleep(1);    
         exit(0);  
     }
 } 
